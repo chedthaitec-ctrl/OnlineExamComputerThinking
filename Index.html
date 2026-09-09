@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบทำข้อสอบออนไลน์ - Anti-Cheat System</title>
+  <!-- Google Fonts: Prompt & Sarabun -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    /* ป้องกันการลากข้อความ */
+    ::selection {
+      background: transparent;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between" oncontextmenu="return false;">
+
+  <!-- ========================================================================= -->
+  <!-- 1. หน้าจอลงทะเบียนและยอมรับเงื่อนไข (Pre-Exam Screen) -->
+  <!-- ========================================================================= -->
+  <div id="startScreen" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white max-w-xl w-full rounded-2xl shadow-xl border border-slate-200 p-6 md:p-8">
+      
+      <!-- หัวข้อ -->
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl mb-3 shadow-inner">
+          <i class="fa-solid fa-graduation-cap text-3xl"></i>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-bold text-slate-800">ระบบทำข้อสอบออนไลน์</h1>
+        <p class="text-slate-500 text-sm mt-1">Online Examination with Anti-Cheat Detection</p>
+      </div>
+
+      <!-- ข้อมูลผู้สอบ -->
+      <div class="space-y-4 mb-6">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">
+            <i class="fa-solid fa-id-card mr-1 text-indigo-500"></i> รหัสประจำตัวนักเรียน / นักศึกษา <span class="text-red-500">*</span>
+          </label>
+          <input type="text" id="inputStudentId" placeholder="เช่น 65012345" 
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">
+            <i class="fa-solid fa-user mr-1 text-indigo-500"></i> ชื่อ - นามสกุล <span class="text-red-500">*</span>
+          </label>
+          <input type="text" id="inputStudentName" placeholder="เช่น นายสมชาย ใจดี" 
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-sm">
+        </div>
+      </div>
+
+      <!-- กฎระเบียบและข้อตกลงการสอบ -->
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-900">
+        <h2 class="font-bold flex items-center text-amber-800 mb-2">
+          <i class="fa-solid fa-shield-halved mr-2 text-amber-600"></i> กฎระเบียบและระบบตรวจจับการทุจริต
+        </h2>
+        <ul class="space-y-1.5 list-disc list-inside text-xs md:text-sm leading-relaxed text-amber-900">
+          <li>ระบบจะเปิดใน <strong>โหมดเต็มหน้าจอ (Fullscreen)</strong> ตลอดการทำข้อสอบ</li>
+          <li><strong>ห้ามสลับหน้าจอ สลับแท็บ หรือเปิดโปรแกรมอื่น</strong> ระบบจะบันทึกประวัติทันที</li>
+          <li>เตือนครั้งที่ 1: แจ้งเตือนตักเตือน</li>
+          <li>เตือนครั้งที่ 2: แจ้งเตือนขั้นสุดท้าย</li>
+          <li><span class="text-red-600 font-bold">สลับจอเกิน 2 ครั้ง: ระบบจะทำการส่งข้อสอบอัตโนมัติทันที</span></li>
+          <li>ระบบจะ <strong>ส่งเสียงไซเรนแจ้งเตือน (Emergency Siren)</strong> ทันทีเมื่อตรวจพบการสลับหน้าจอ</li>
+          <li>ไม่อนุญาตให้คลิกขวา คัดลอกข้อความ หรือใช้ปุ่มลัดใดๆ</li>
+        </ul>
+
+        <!-- ปุ่มทดสอบเสียงไซเรน -->
+        <div class="mt-3 pt-2.5 border-t border-amber-200/80 flex items-center justify-between">
+          <span class="text-xs text-amber-800 flex items-center">
+            <i class="fa-solid fa-bullhorn mr-1.5 text-amber-600"></i> ทดสอบระดับเสียงไซเรน:
+          </span>
+          <button type="button" onclick="testWarningSound()" class="px-3 py-1 bg-amber-200 hover:bg-amber-300 text-amber-900 text-xs font-semibold rounded-lg transition flex items-center space-x-1 shadow-sm">
+            <i class="fa-solid fa-play text-[10px]"></i>
+            <span>กดทดสอบเสียงไซเรน</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- กล่องติ๊กยินยอม -->
+      <label class="flex items-center space-x-3 cursor-pointer mb-6 p-2 rounded-lg hover:bg-slate-50 transition">
+        <input type="checkbox" id="checkAgree" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+        <span class="text-xs md:text-sm text-slate-700 font-medium">ข้าพเจ้าได้อ่านและยอมรับกฎระเบียบการสอบทั้งหมด</span>
+      </label>
+
+      <!-- ปุ่มเริ่มทำข้อสอบ -->
+      <button onclick="startExamProcess()" id="btnStartExam"
+        class="w-full py-3 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transition flex items-center justify-center space-x-2">
+        <span>เริ่มทำข้อสอบ (เข้าสู่โหมดเต็มจอ)</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- 2. หน้าจอห้องสอบจริง (Exam Room Screen) -->
+  <!-- ========================================================================= -->
+  <div id="examScreen" class="hidden min-h-screen flex flex-col justify-between">
+    
+    <!-- Top Header Bar (Sticky) -->
+    <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-40 px-4 py-3">
+      <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+        
+        <!-- ข้อมูลผู้สอบ -->
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-user-graduate"></i>
+          </div>
+          <div>
+            <h2 id="headerStudentName" class="font-bold text-slate-800 text-sm md:text-base leading-tight">-</h2>
+            <p id="headerStudentId" class="text-xs text-slate-500">รหัส: -</p>
+          </div>
+        </div>
+
+        <!-- ตัวนับเวลาถอยหลัง & จำนวนครั้งที่สลับหน้าจอ -->
+        <div class="flex items-center space-x-3">
+          <!-- สลับหน้าจอ Tracker -->
+          <div id="badgeWarning" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs md:text-sm font-semibold">
+            <i class="fa-solid fa-eye"></i>
+            <span>สลับหน้าจอ: <span id="textSwitchCount">0</span>/<span id="textMaxSwitch">2</span></span>
+          </div>
+
+          <!-- ตัวจับเวลาถอยหลัง -->
+          <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-xs md:text-sm font-bold">
+            <i class="fa-regular fa-clock animate-pulse"></i>
+            <span id="textTimer">60:00</span>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- Exam Content Area -->
+    <main class="max-w-6xl mx-auto w-full p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
+      
+      <!-- ฝั่งซ้าย: กล่องข้อสอบ (8 Cols) -->
+      <section class="lg:col-span-8 space-y-4">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 relative">
+          
+          <!-- แถบระบุข้อปัจจุบัน -->
+          <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+            <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wider bg-indigo-50 px-3 py-1 rounded-full">
+              ข้อที่ <span id="currentQuestionNumber">1</span> จากทั้งหมด <span id="totalQuestionsCount">5</span> ข้อ
+            </span>
+            <span class="text-xs text-slate-400">คะแนน: <span id="questionScoreText">1</span> คะแนน</span>
+          </div>
+
+          <!-- คำถาม -->
+          <h3 id="questionTitle" class="text-base md:text-lg font-semibold text-slate-800 leading-relaxed mb-6">
+            กำลังโหลดข้อสอบ...
+          </h3>
+
+          <!-- ตัวเลือก A, B, C, D -->
+          <div id="optionsContainer" class="space-y-3">
+            <!-- Render options dynamically -->
+          </div>
+
+          <!-- ปุ่มนำทาง Previous / Next / Submit -->
+          <div class="flex items-center justify-between pt-8 mt-6 border-t border-slate-100">
+            <button id="btnPrev" onclick="navigateQuestion(-1)" 
+              class="px-4 py-2 text-sm font-medium rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-600 transition flex items-center space-x-1">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+              <span>ข้อก่อนหน้า</span>
+            </button>
+
+            <button id="btnNext" onclick="navigateQuestion(1)" 
+              class="px-5 py-2 text-sm font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center space-x-1 shadow-md shadow-indigo-100">
+              <span>ข้อถัดไป</span>
+              <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ฝั่งขวา: พาเลตข้อสอบ & ปุ่มส่ง (4 Cols) -->
+      <aside class="lg:col-span-4 space-y-4">
+        
+        <!-- พาเลตนำทางข้อสอบ (Question Palette) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+          <h4 class="font-bold text-slate-800 text-sm mb-3 flex items-center">
+            <i class="fa-solid fa-table-cells-large mr-2 text-indigo-500"></i> ภาพรวมข้อสอบ
+          </h4>
+          <div id="paletteGrid" class="grid grid-cols-5 gap-2">
+            <!-- Dynamically populated buttons -->
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-indigo-600 inline-block mr-1.5"></span> ตอบแล้ว</span>
+            <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-slate-200 inline-block mr-1.5"></span> ยังไม่ตอบ</span>
+          </div>
+        </div>
+
+        <!-- กล่องส่งข้อสอบ -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 text-center">
+          <p class="text-xs text-slate-500 mb-3">เมื่อทำข้อสอบครบถ้วนแล้ว สามารถกดส่งข้อสอบได้ทันที</p>
+          <button onclick="confirmSubmitExam()" 
+            class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-100 hover:shadow-emerald-200 transition flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>ส่งข้อสอบ</span>
+          </button>
+        </div>
+
+        <!-- กล่องแจ้งเตือนความปลอดภัย -->
+        <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4 text-xs text-slate-500 space-y-2">
+          <div class="font-semibold text-slate-700 flex items-center">
+            <i class="fa-solid fa-lock mr-1.5 text-indigo-500"></i> ระบบความปลอดภัยกำลังทำงาน
+          </div>
+          <p>หากคลิกออกนอกหน้าจอ สลับโปรแกรม หรือออกจากโหมดเต็มจอ ระบบจะตรวจจับและบันทึกประวัติทันที</p>
+        </div>
+
+      </aside>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-400">
+      ระบบทำข้อสอบออนไลน์ Anti-Cheat Protected &copy; 2026
+    </footer>
+
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- 3. หน้าจอสรุปผลคะแนนหลังส่ง (Result Screen) -->
+  <!-- ========================================================================= -->
+  <div id="resultScreen" class="hidden min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white max-w-lg w-full rounded-2xl shadow-xl border border-slate-200 p-6 md:p-8 text-center">
+      
+      <div id="resultIconWrapper" class="inline-flex items-center justify-center w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full mb-4 shadow-inner">
+        <i class="fa-solid fa-check text-4xl"></i>
+      </div>
+
+      <h2 id="resultTitle" class="text-2xl font-bold text-slate-800 mb-1">ส่งข้อสอบเรียบร้อยแล้ว</h2>
+      <p id="resultSubtitle" class="text-slate-500 text-sm mb-6">ข้อมูลผลการสอบและคะแนนถูกบันทึกลงระบบแล้ว</p>
+
+      <div class="bg-slate-50 rounded-2xl border border-slate-200 p-5 mb-6 text-left space-y-3">
+        <div class="flex justify-between text-sm">
+          <span class="text-slate-500">ชื่อผู้สอบ:</span>
+          <span id="resName" class="font-semibold text-slate-800">-</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-slate-500">รหัสประจำตัว:</span>
+          <span id="resId" class="font-semibold text-slate-800">-</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-slate-500">สถานะการส่ง:</span>
+          <span id="resStatus" class="font-semibold text-emerald-600">-</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-slate-500">จำนวนครั้งที่สลับหน้าจอ:</span>
+          <span id="resSwitchCount" class="font-semibold text-amber-600">0 ครั้ง</span>
+        </div>
+        <hr class="border-slate-200">
+        <div class="flex justify-between items-center pt-1">
+          <span class="text-base font-bold text-slate-700">คะแนนที่ได้:</span>
+          <span class="text-2xl font-extrabold text-indigo-600">
+            <span id="resScore">0</span> / <span id="resTotal">0</span>
+            <span class="text-sm font-normal text-slate-500">(<span id="resPercent">0</span>%)</span>
+          </span>
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-400 mb-6">ท่านสามารถปิดหน้าต่างนี้ได้เลย ขอบคุณที่ให้ความร่วมมือในการสอบ</p>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- JavaScript Logic: Anti-Cheat & Exam Engine -->
+  <!-- ========================================================================= -->
+  <script>
+    // --- State Variables ---
+    let examData = {
+      durationMinutes: 15,
+      maxAllowedSwitches: 2,
+      questions: []
+    };
+
+    let studentProfile = {
+      id: '',
+      name: ''
+    };
+
+    let userAnswers = {}; // { 1: 'A', 2: 'C' }
+    let currentQuestionIndex = 0;
+    let switchCount = 0;
+    let cheatLogs = [];
+    let timerInterval = null;
+    let secondsRemaining = 15 * 60;
+    let timeSpentSeconds = 0;
+    let isExamActive = false;
+    let isSubmitted = false;
+
+    // ตัวแปรกัน Event ยิงซ้ำซ้อน (Debounce 2.5 วินาที)
+    let lastSwitchTriggerTime = 0;
+    const SWITCH_DEBOUNCE_MS = 2500;
+
+    // =========================================================================
+    // ระบบเสียงไซเรนแจ้งเตือน (Emergency Siren Synthesizer - Web Audio API)
+    // =========================================================================
+    let audioCtx = null;
+
+    function initAudioContext() {
+      try {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      } catch (e) {
+        console.warn('Cannot init AudioContext:', e);
+      }
+    }
+
+    /**
+     * สังเคราะห์เสียงไซเรนกวาดความถี่ (Siren Sweep) วี้-หว่อ
+     * @param {number} cycles จำนวนรอบของเสียงวี้-หว่อ
+     * @param {number} cycleDuration ระยะเวลาต่อ 1 รอบ (วินาที)
+     * @param {number} lowFreq ความถี่ต่ำสุด (Hz)
+     * @param {number} highFreq ความถี่สูงสุด (Hz)
+     * @param {number} volume ระดับความดัง
+     */
+    function playSiren(cycles = 2, cycleDuration = 0.55, lowFreq = 650, highFreq = 1250, volume = 0.35) {
+      initAudioContext();
+      if (!audioCtx) return;
+
+      try {
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        // ใช้คลื่น triangle ให้มวลเสียงหนา กังวาน คมชัดแบบไซเรนกู้ภัย/ตำรวจ
+        osc.type = 'triangle';
+
+        const halfCycle = cycleDuration / 2;
+        let t = now;
+        osc.frequency.setValueAtTime(lowFreq, t);
+
+        for (let i = 0; i < cycles; i++) {
+          // กวาดเสียงขึ้น: วี้...
+          osc.frequency.linearRampToValueAtTime(highFreq, t + halfCycle);
+          // กวาดเสียงลง: หว่อ...
+          osc.frequency.linearRampToValueAtTime(lowFreq, t + cycleDuration);
+          t += cycleDuration;
+        }
+
+        const totalDuration = cycles * cycleDuration;
+
+        // ปรับ fade-in และ fade-out ป้องกันเสียงคลิกสะดุด
+        gain.gain.setValueAtTime(0.01, now);
+        gain.gain.linearRampToValueAtTime(volume, now + 0.05);
+        gain.gain.setValueAtTime(volume, now + totalDuration - 0.08);
+        gain.gain.linearRampToValueAtTime(0.001, now + totalDuration);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now + totalDuration);
+      } catch (e) {
+        console.warn('playSiren error:', e);
+      }
+    }
+
+    function playWarningSound(level) {
+      initAudioContext();
+      if (!audioCtx) return;
+
+      if (level === 1) {
+        // ไซเรนเตือนครั้งที่ 1: ไซเรน 2 รอบ (วี้-หว่อ วี้-หว่อ)
+        playSiren(2, 0.55, 650, 1200, 0.35);
+      } else if (level === 2) {
+        // ไซเรนเตือนครั้งที่ 2: ไซเรนฉุกเฉินเร็วและแหลมขึ้น 4 รอบ (วี้-หว่อ-วี้-หว่อ เร่งด่วน)
+        playSiren(4, 0.35, 750, 1450, 0.45);
+      } else if (level >= 3) {
+        // ไซเรนเตือนครั้งที่ 3 (ตัดสิทธิ์): ไซเรนเตือนภัยยาวต่อเนื่อง 6 รอบ
+        playSiren(6, 0.3, 800, 1500, 0.5);
+      }
+    }
+
+    function testWarningSound() {
+      initAudioContext();
+      // กดทดสอบจะเล่นเสียงไซเรนเตือนทันที
+      playWarningSound(1);
+    }
+
+    // --- เริ่มต้นโหลดข้อสอบเมื่อเปิดหน้าเว็บ ---
+    window.addEventListener('DOMContentLoaded', () => {
+      loadExamQuestions();
+      setupSecurityPrevention();
+    });
+
+    // 1. ดึงข้อมูลข้อสอบจาก Google Apps Script (หรือ Mock กรณีทดสอบภายนอก)
+    function loadExamQuestions() {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(onExamLoaded)
+          .withFailureHandler((err) => {
+            console.error(err);
+            useFallbackMockQuestions();
+          })
+          .getExamQuestions();
+      } else {
+        // ทดสอบ Local โดยไม่ต้องผ่าน GAS
+        useFallbackMockQuestions();
+      }
+    }
+
+    function onExamLoaded(response) {
+      if (response && response.success) {
+        examData = response;
+        secondsRemaining = (examData.durationMinutes || 15) * 60;
+        document.getElementById('textMaxSwitch').innerText = examData.maxAllowedSwitches || 2;
+      } else {
+        useFallbackMockQuestions();
+      }
+    }
+
+    function useFallbackMockQuestions() {
+      examData = {
+        durationMinutes: 15,
+        maxAllowedSwitches: 2,
+        questions: [
+          {
+            id: 1,
+            question: "1. ข้อใดเป็นฟังก์ชันตรวจจับการสลับแท็บบนหน้าเว็บใน JavaScript?",
+            options: {
+              A: "document.hidden / visibilitychange",
+              B: "window.location",
+              C: "console.log()",
+              D: "localStorage.getItem()"
+            },
+            score: 1
+          },
+          {
+            id: 2,
+            question: "2. HTML Service ใน Google Apps Script ใช้คำสั่งใดในการแสดงหน้าเว็บ?",
+            options: {
+              A: "HtmlService.createHtmlOutputFromFile()",
+              B: "SpreadsheetApp.render()",
+              C: "Browser.msgBox()",
+              D: "DriveApp.createFile()"
+            },
+            score: 1
+          },
+          {
+            id: 3,
+            question: "3. เหตุการณ์ (Event) ใดใช้ตรวจจับการหลุดโฟกัสของหน้าต่างเบราว์เซอร์?",
+            options: {
+              A: "window.onfocus",
+              B: "window.onblur",
+              C: "document.onload",
+              D: "window.onresize()"
+            },
+            score: 1
+          },
+          {
+            id: 4,
+            question: "4. ภาษาหลักที่ใช้เขียน Logic ฝั่งเซิร์ฟเวอร์บน Google Apps Script คือภาษาใด?",
+            options: {
+              A: "Python",
+              B: "PHP",
+              C: "JavaScript",
+              D: "C#"
+            },
+            score: 1
+          },
+          {
+            id: 5,
+            question: "5. การส่งข้อมูลจาก Frontend กลับมายังฟังก์ชันบน Code.gs ใช้คำสั่งใด?",
+            options: {
+              A: "fetch('/api')",
+              B: "google.script.run",
+              C: "axios.post()",
+              D: "ajax.send()"
+            },
+            score: 1
+          }
+        ]
+      };
+      secondsRemaining = examData.durationMinutes * 60;
+      document.getElementById('textMaxSwitch').innerText = examData.maxAllowedSwitches;
+    }
+
+    // 2. ขั้นตอนเริ่มสอบและขอ Fullscreen
+    function startExamProcess() {
+      const studentId = document.getElementById('inputStudentId').value.trim();
+      const studentName = document.getElementById('inputStudentName').value.trim();
+      const checkAgree = document.getElementById('checkAgree').checked;
+
+      if (!studentId || !studentName) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'กรุณากรอกข้อมูลให้ครบถ้วน',
+          text: 'โปรดระบุรหัสนักเรียนและชื่อ-นามสกุลก่อนเริ่มทำข้อสอบ',
+          confirmButtonColor: '#4F46E5'
+        });
+        return;
+      }
+
+      if (!checkAgree) {
+        Swal.fire({
+          icon: 'info',
+          title: 'กรุณายอมรับเงื่อนไขการสอบ',
+          text: 'โปรดทำเครื่องหมายยอมรับกฎระเบียบการสอบ',
+          confirmButtonColor: '#4F46E5'
+        });
+        return;
+      }
+
+      studentProfile.id = studentId;
+      studentProfile.name = studentName;
+
+      // ปลดล็อกระบบเสียง (Browser AudioContext)
+      initAudioContext();
+
+      // ขอเข้าสู่โหมด Fullscreen
+      requestFullScreenMode();
+
+      // สลับหน้าจอไปที่ Exam Screen
+      document.getElementById('startScreen').classList.add('hidden');
+      document.getElementById('examScreen').classList.remove('hidden');
+
+      // อัปเดตข้อมูลบน Header
+      document.getElementById('headerStudentName').innerText = studentName;
+      document.getElementById('headerStudentId').innerText = 'รหัส: ' + studentId;
+      document.getElementById('totalQuestionsCount').innerText = examData.questions.length;
+
+      // เริ่มการสอบ
+      isExamActive = true;
+      currentQuestionIndex = 0;
+      renderCurrentQuestion();
+      renderPalette();
+      startCountdownTimer();
+
+      // เริ่มทำงานระบบ Anti-Cheat Listeners
+      setupAntiCheatListeners();
+    }
+
+    function requestFullScreenMode() {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(err => console.log('Fullscreen error:', err));
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+      }
+    }
+
+    // =========================================================================
+    // 3. ระบบตรวจจับการทุจริตและการสลับหน้าจอ (ANTI-CHEAT ENGINE)
+    // =========================================================================
+    function setupAntiCheatListeners() {
+      // 3.1 ตรวจจับการสลับแท็บ ย่อหน้าต่าง (Visibility Change)
+      document.addEventListener('visibilitychange', () => {
+        if (!isExamActive || isSubmitted) return;
+        if (document.hidden) {
+          triggerScreenSwitchViolation('สลับแท็บ / ย่อหน้าต่างเบราว์เซอร์ (Tab Switch / Minimize)');
+        }
+      });
+
+      // 3.2 ตรวจจับการหลุดโฟกัสของหน้าต่าง (Window Blur เช่น คลิกจออื่น, Alt+Tab)
+      window.addEventListener('blur', () => {
+        if (!isExamActive || isSubmitted) return;
+        triggerScreenSwitchViolation('หลุดโฟกัสจากหน้าต่างสอบ / คลิกโปรแกรมอื่น (Window Blur)');
+      });
+
+      // 3.3 ตรวจจับการออกจากโหมดเต็มหน้าจอ (Fullscreen Exit)
+      document.addEventListener('fullscreenchange', () => {
+        if (!isExamActive || isSubmitted) return;
+        if (!document.fullscreenElement) {
+          triggerScreenSwitchViolation('ออกจากโหมดเต็มหน้าจอ (Exited Fullscreen)');
+        }
+      });
+    }
+
+    // ฟังก์ชันประมวลผลเมื่อเกิดการสลับหน้าจอ
+    function triggerScreenSwitchViolation(eventType) {
+      const now = Date.now();
+      // ป้องกันการทริกเกอร์ซ้ำซ้อนภายใน 2.5 วินาที
+      if (now - lastSwitchTriggerTime < SWITCH_DEBOUNCE_MS) {
+        return;
+      }
+      lastSwitchTriggerTime = now;
+
+      switchCount++;
+      const timeStr = new Date().toLocaleTimeString('th-TH');
+
+      // บันทึก Log
+      cheatLogs.push({
+        timestamp: timeStr,
+        warningLevel: switchCount,
+        eventType: eventType,
+        details: `ผู้สอบออกจากหน้าจอครั้งที่ ${switchCount}`
+      });
+
+      // ส่ง Log แบบ Real-time ไปยัง Google Sheets ทันที (เพื่อให้ดังไซเรนที่แท็บ CheatLogs ทันทีที่สลับจอ)
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withFailureHandler(err => console.warn('บันทึก Log Realtime ไม่สำเร็จ:', err))
+          .recordLiveViolation({
+            studentId: studentProfile.id,
+            studentName: studentProfile.name,
+            warningLevel: switchCount,
+            eventType: eventType,
+            details: `ผู้สอบออกจากหน้าจอครั้งที่ ${switchCount}`
+          });
+      }
+
+      // อัปเดต Badge บน Header
+      const switchText = document.getElementById('textSwitchCount');
+      if (switchText) switchText.innerText = switchCount;
+
+      const badge = document.getElementById('badgeWarning');
+      if (badge) {
+        if (switchCount === 1) {
+          badge.className = 'flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 text-xs md:text-sm font-semibold';
+        } else {
+          badge.className = 'flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-xs md:text-sm font-semibold animate-bounce';
+        }
+      }
+
+      // แสดงการแจ้งเตือนตามระดับ พร้อมส่งเสียงเตือนทันที
+      if (switchCount === 1) {
+        playWarningSound(1);
+        showWarningModal1(timeStr);
+      } else if (switchCount === 2) {
+        playWarningSound(2);
+        showWarningModal2(timeStr);
+      } else if (switchCount > examData.maxAllowedSwitches) {
+        playWarningSound(3);
+        showDisqualifiedModal();
+      }
+    }
+
+    // คำเตือนครั้งที่ 1
+    function showWarningModal1(timeStr) {
+      Swal.fire({
+        icon: 'warning',
+        title: '⚠️ ตรวจพบการสลับหน้าจอ (ครั้งที่ 1/2)',
+        html: `
+          <div class="text-left text-sm text-slate-600 space-y-2">
+            <p>ระบบตรวจพบว่าคุณได้ <strong>สลับหน้าจอ ย่อหน้าต่าง หรือคลิกออกนอกหน้าสอบ</strong> เมื่อเวลา <strong>${timeStr}</strong></p>
+            <p class="text-amber-700 font-semibold">⚠️ ระบบได้บันทึกประวัติการกระทำนี้ไว้แล้ว กรุณาทำข้อสอบภายในหน้านี้เท่านั้น</p>
+          </div>
+        `,
+        confirmButtonText: 'รับทราบ และทำข้อสอบต่อ',
+        confirmButtonColor: '#F59E0B',
+        allowOutsideClick: false,
+        allowEscapeKey: false
+      }).then(() => {
+        requestFullScreenMode();
+      });
+    }
+
+    // คำเตือนครั้งที่ 2 (ครั้งสุดท้าย)
+    function showWarningModal2(timeStr) {
+      Swal.fire({
+        icon: 'error',
+        title: '🚨 คำเตือนครั้งสุดท้าย! (ครั้งที่ 2/2)',
+        html: `
+          <div class="text-left text-sm text-slate-600 space-y-2">
+            <p>ตรวจพบการสลับหน้าจอครั้งที่ 2 เมื่อเวลา <strong>${timeStr}</strong></p>
+            <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 font-bold text-xs md:text-sm">
+              ⛔ หากคุณสลับหน้าจออีกเพียง 1 ครั้ง ระบบจะยุติการสอบและทำการส่งข้อสอบอัตโนมัติทันที!
+            </div>
+          </div>
+        `,
+        confirmButtonText: 'ข้าพเจ้าเข้าใจแล้ว',
+        confirmButtonColor: '#DC2626',
+        allowOutsideClick: false,
+        allowEscapeKey: false
+      }).then(() => {
+        requestFullScreenMode();
+      });
+    }
+
+    // ครั้งที่ 3: ตัดสิทธิ์และส่งข้อสอบอัตโนมัติ
+    function showDisqualifiedModal() {
+      isExamActive = false;
+      clearInterval(timerInterval);
+
+      Swal.fire({
+        icon: 'error',
+        title: '⛔ สิ้นสุดการสอบอัตโนมัติ',
+        html: `
+          <div class="text-center text-sm text-slate-600 space-y-2">
+            <p class="font-bold text-red-600 text-base">คุณสลับหน้าจอเกินจำนวนที่กำหนด (3 ครั้ง)</p>
+            <p>ระบบได้ทำการบันทึกหลักฐานทั้งหมดและกำลังส่งคำตอบของคุณโดยอัตโนมัติ...</p>
+          </div>
+        `,
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        allowEscapeKey: false
+      });
+
+      // ส่งข้อสอบทันที
+      executeSubmission(true);
+    }
+
+    // ป้องกันการก็อปปี้ คลิกขวา และปุ่มลัด
+    function setupSecurityPrevention() {
+      // บล็อกคลิกขวา
+      document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+      // บล็อก Copy, Cut, Paste
+      document.addEventListener('copy', (e) => e.preventDefault());
+      document.addEventListener('cut', (e) => e.preventDefault());
+      document.addEventListener('paste', (e) => e.preventDefault());
+
+      // บล็อกปุ่มลัด DevTools
+      document.addEventListener('keydown', (e) => {
+        if (
+          e.key === 'F12' ||
+          (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'C' || e.key === 'c' || e.key === 'J' || e.key === 'j')) ||
+          (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.key === 'S' || e.key === 's' || e.key === 'A' || e.key === 'a'))
+        ) {
+          e.preventDefault();
+          return false;
+        }
+      });
+    }
+
+    // =========================================================================
+    // 4. ตัวนับเวลาถอยหลัง (COUNTDOWN TIMER)
+    // =========================================================================
+    function startCountdownTimer() {
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        if (!isExamActive || isSubmitted) return;
+
+        secondsRemaining--;
+        timeSpentSeconds++;
+        updateTimerDisplay();
+
+        if (secondsRemaining <= 0) {
+          clearInterval(timerInterval);
+          isExamActive = false;
+          Swal.fire({
+            icon: 'info',
+            title: 'หมดเวลาทำข้อสอบแล้ว',
+            text: 'ระบบกำลังทำการส่งข้อสอบของคุณโดยอัตโนมัติ...',
+            showConfirmButton: false,
+            allowOutsideClick: false
+          });
+          executeSubmission(false);
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(secondsRemaining / 60);
+      const seconds = secondsRemaining % 60;
+      const displayStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      const timerElement = document.getElementById('textTimer');
+      if (timerElement) {
+        timerElement.innerText = displayStr;
+      }
+    }
+
+    // =========================================================================
+    // 5. การแสดงผลข้อสอบและตัวเลือก (EXAM NAVIGATION)
+    // =========================================================================
+    function renderCurrentQuestion() {
+      if (!examData.questions || examData.questions.length === 0) return;
+
+      const q = examData.questions[currentQuestionIndex];
+      document.getElementById('currentQuestionNumber').innerText = currentQuestionIndex + 1;
+      document.getElementById('questionScoreText').innerText = q.score || 1;
+      document.getElementById('questionTitle').innerText = q.question;
+
+      const container = document.getElementById('optionsContainer');
+      container.innerHTML = '';
+
+      const currentSelected = userAnswers[q.id];
+
+      for (const [key, text] of Object.entries(q.options)) {
+        const isChecked = currentSelected === key;
+        const optDiv = document.createElement('label');
+        optDiv.className = `flex items-center p-4 rounded-xl border cursor-pointer transition ${
+          isChecked 
+            ? 'bg-indigo-50 border-indigo-500 ring-2 ring-indigo-200' 
+            : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+        }`;
+
+        optDiv.innerHTML = `
+          <input type="radio" name="q_${q.id}" value="${key}" ${isChecked ? 'checked' : ''} 
+            onchange="selectOption(${q.id}, '${key}')" class="w-5 h-5 text-indigo-600 focus:ring-indigo-500 border-slate-300 mr-3">
+          <div class="flex-grow">
+            <span class="font-bold text-slate-700 mr-2">${key}.</span>
+            <span class="text-slate-800 text-sm md:text-base">${text}</span>
+          </div>
+        `;
+        container.appendChild(optDiv);
+      }
+
+      // อัปเดตปุ่มก่อนหน้า/ถัดไป
+      document.getElementById('btnPrev').disabled = currentQuestionIndex === 0;
+      document.getElementById('btnPrev').classList.toggle('opacity-50', currentQuestionIndex === 0);
+      document.getElementById('btnPrev').classList.toggle('cursor-not-allowed', currentQuestionIndex === 0);
+
+      const isLast = currentQuestionIndex === examData.questions.length - 1;
+      const btnNext = document.getElementById('btnNext');
+      if (isLast) {
+        btnNext.innerHTML = `<span>ข้อสอบข้อสุดท้าย</span>`;
+        btnNext.disabled = true;
+        btnNext.classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        btnNext.innerHTML = `<span>ข้อถัดไป</span> <i class="fa-solid fa-chevron-right text-xs"></i>`;
+        btnNext.disabled = false;
+        btnNext.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+    }
+
+    function selectOption(questionId, optionKey) {
+      userAnswers[questionId] = optionKey;
+      renderCurrentQuestion();
+      renderPalette();
+    }
+
+    function navigateQuestion(direction) {
+      const newIndex = currentQuestionIndex + direction;
+      if (newIndex >= 0 && newIndex < examData.questions.length) {
+        currentQuestionIndex = newIndex;
+        renderCurrentQuestion();
+      }
+    }
+
+    function jumpToQuestion(index) {
+      if (index >= 0 && index < examData.questions.length) {
+        currentQuestionIndex = index;
+        renderCurrentQuestion();
+      }
+    }
+
+    function renderPalette() {
+      const grid = document.getElementById('paletteGrid');
+      grid.innerHTML = '';
+
+      examData.questions.forEach((q, idx) => {
+        const isAnswered = !!userAnswers[q.id];
+        const isCurrent = idx === currentQuestionIndex;
+
+        const btn = document.createElement('button');
+        btn.innerText = idx + 1;
+        btn.onclick = () => jumpToQuestion(idx);
+
+        let classes = 'h-10 rounded-xl font-bold text-xs flex items-center justify-center transition ';
+        if (isCurrent) {
+          classes += 'ring-2 ring-indigo-500 ring-offset-2 ';
+        }
+
+        if (isAnswered) {
+          classes += 'bg-indigo-600 text-white shadow-sm';
+        } else {
+          classes += 'bg-slate-100 text-slate-600 hover:bg-slate-200';
+        }
+
+        btn.className = classes;
+        grid.appendChild(btn);
+      });
+    }
+
+    // =========================================================================
+    // 6. การส่งข้อสอบ (SUBMISSION)
+    // =========================================================================
+    function confirmSubmitExam() {
+      const answeredCount = Object.keys(userAnswers).length;
+      const totalCount = examData.questions.length;
+      const unansweredCount = totalCount - answeredCount;
+
+      let msg = `คุณตอบข้อสอบแล้ว ${answeredCount} จากทั้งหมด ${totalCount} ข้อ`;
+      if (unansweredCount > 0) {
+        msg += `<br><span class="text-amber-600 font-semibold">⚠️ ยังมีข้อที่ยังไม่ได้ตอบอีก ${unansweredCount} ข้อ</span>`;
+      }
+
+      Swal.fire({
+        icon: 'question',
+        title: 'ยืนยันการส่งข้อสอบหรือไม่?',
+        html: msg,
+        showCancelButton: true,
+        confirmButtonText: 'ยืนยันส่งข้อสอบ',
+        cancelButtonText: 'กลับไปทำต่อ',
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#64748B'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          executeSubmission(false);
+        }
+      });
+    }
+
+    function executeSubmission(isAutoSubmitted) {
+      if (isSubmitted) return;
+      isSubmitted = true;
+      isExamActive = false;
+      clearInterval(timerInterval);
+
+      // ออกจากโหมดเต็มหน้าจอ
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+
+      Swal.fire({
+        title: 'กำลังส่งข้อสอบ...',
+        text: 'โปรดรอสักครู่ ระบบกำลังบันทึกคะแนนและข้อมูลการสอบ',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      const payload = {
+        studentId: studentProfile.id,
+        studentName: studentProfile.name,
+        answers: userAnswers,
+        switchCount: switchCount,
+        cheatLogs: cheatLogs,
+        isAutoSubmitted: isAutoSubmitted,
+        timeSpent: timeSpentSeconds,
+        alreadyRecordedLive: true // บันทึกลง CheatLogs ไปแล้วแบบ Real-Time ไม่ต้องบันทึกซ้ำ
+      };
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(onSubmissionSuccess)
+          .withFailureHandler(onSubmissionFailure)
+          .submitExamResult(payload);
+      } else {
+        // Mock Response สำหรับรัน Local
+        setTimeout(() => {
+          // คำนวณคะแนน mock
+          let mockScore = 0;
+          const mockAnswers = { 1: 'A', 2: 'A', 3: 'B', 4: 'C', 5: 'B' };
+          for (let qId in mockAnswers) {
+            if (userAnswers[qId] === mockAnswers[qId]) mockScore++;
+          }
+          onSubmissionSuccess({
+            success: true,
+            studentName: studentProfile.name,
+            studentId: studentProfile.id,
+            score: mockScore,
+            totalScore: examData.questions.length,
+            percentage: ((mockScore / examData.questions.length) * 100).toFixed(2),
+            switchCount: switchCount,
+            status: isAutoSubmitted ? 'ส่งอัตโนมัติ (สลับหน้าจอเกินกำหนด)' : 'ส่งปกติ'
+          });
+        }, 1200);
+      }
+    }
+
+    function onSubmissionSuccess(result) {
+      Swal.close();
+
+      // สลับไปหน้า Result Screen
+      document.getElementById('examScreen').classList.add('hidden');
+      document.getElementById('resultScreen').classList.remove('hidden');
+
+      document.getElementById('resName').innerText = result.studentName || studentProfile.name;
+      document.getElementById('resId').innerText = result.studentId || studentProfile.id;
+      document.getElementById('resScore').innerText = result.score;
+      document.getElementById('resTotal').innerText = result.totalScore;
+      document.getElementById('resPercent').innerText = result.percentage;
+      document.getElementById('resSwitchCount').innerText = (result.switchCount || 0) + ' ครั้ง';
+
+      const resStatus = document.getElementById('resStatus');
+      const iconWrapper = document.getElementById('resultIconWrapper');
+      
+      if (result.status && result.status.includes('สลับหน้าจอเกิน')) {
+        resStatus.innerText = result.status;
+        resStatus.className = 'font-semibold text-rose-600';
+        iconWrapper.className = 'inline-flex items-center justify-center w-20 h-20 bg-rose-100 text-rose-600 rounded-full mb-4 shadow-inner';
+        iconWrapper.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-4xl"></i>';
+        document.getElementById('resultTitle').innerText = 'ส่งข้อสอบอัตโนมัติ (สลับหน้าจอเกินกำหนด)';
+      } else {
+        resStatus.innerText = result.status;
+        resStatus.className = 'font-semibold text-emerald-600';
+      }
+    }
+
+    function onSubmissionFailure(err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาดในการส่งข้อมูล',
+        text: err ? (err.message || err) : 'ไม่สามารถเชื่อมต่อกับ Google Apps Script ได้',
+        confirmButtonColor: '#4F46E5'
+      });
+    }
+  </script>
+
+</body>
+</html>
